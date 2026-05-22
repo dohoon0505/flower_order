@@ -90,10 +90,20 @@
   </defs>
 </svg>
 
-<!-- ============ SIDEBAR TOGGLE (mobile) ============ -->
-<button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="네비게이션 열기">
-  <svg width="20" height="20"><use href="#i-menu"/></svg>
-</button>
+<!-- ============ TOPBAR / SEARCH ============ -->
+<header class="topbar" id="topbar">
+  <button class="topbar-toggle" onclick="toggleSidebar()" aria-label="네비게이션 열기">
+    <svg width="20" height="20"><use href="#i-menu"/></svg>
+  </button>
+  <div class="search-wrap">
+    <div class="search-bar" id="search-bar">
+      <svg width="16" height="16"><use href="#i-search"/></svg>
+      <input type="text" class="search-input" id="search-input" placeholder="검색..." autocomplete="off">
+      <kbd class="search-kbd">Ctrl K</kbd>
+    </div>
+    <div class="search-results" id="search-results"></div>
+  </div>
+</header>
 <div class="sidebar-scrim" onclick="closeSidebar()"></div>
 
 <!-- ============ SIDEBAR ============ -->

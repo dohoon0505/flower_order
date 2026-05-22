@@ -418,9 +418,7 @@
     }
   });
 
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') closeSidebar();
-  });
+  /* Escape key handled in search section below */
 
   /* ============ SCROLL FADE-IN ============ */
   var observer = new IntersectionObserver(function (entries) {
@@ -437,6 +435,100 @@
     card.style.transform = 'translateY(16px)';
     card.style.transition = 'opacity 500ms cubic-bezier(0.2,0,0,1), transform 500ms cubic-bezier(0.2,0,0,1)';
     observer.observe(card);
+  });
+
+  /* ============ SEARCH ============ */
+  var searchInput = document.getElementById('search-input');
+  var searchResultsEl = document.getElementById('search-results');
+
+  function getSearchableItems() {
+    if (!systemData) return [];
+    var items = [];
+    (systemData.regions || []).forEach(function (region) {
+      items.push({ type: 'region', name: region.name, parent: '', href: '#region/' + encodeURIComponent(region.name), icon: 'i-map-pin' });
+      if (region.cities) {
+        region.cities.forEach(function (city) {
+          items.push({ type: 'city', name: city, parent: region.name, href: '#region/' + encodeURIComponent(region.name) + '/' + encodeURIComponent(city), icon: 'i-map-pin' });
+        });
+      }
+    });
+    (systemData.shops || []).forEach(function (shop) {
+      items.push({ type: 'shop', name: shop.name, parent: shop.region || '', href: '#shop/' + shop.id, icon: 'i-store' });
+    });
+    (systemData.posts || []).forEach(function (post) {
+      items.push({ type: 'post', name: post.title, parent: post.category || '', href: '#post/' + post.id, icon: 'i-edit' });
+    });
+    (systemData.categories || []).forEach(function (cat) {
+      items.push({ type: 'category', name: cat.title, parent: cat.desc || '', href: '#category/' + cat.id, icon: 'i-flower' });
+    });
+    return items;
+  }
+
+  function performSearch(query) {
+    if (!searchResultsEl) return;
+    if (!query) { searchResultsEl.classList.remove('is-open'); return; }
+    var items = getSearchableItems();
+    var q = query.toLowerCase();
+    var matched = items.filter(function (item) {
+      return item.name.toLowerCase().indexOf(q) !== -1 ||
+             item.parent.toLowerCase().indexOf(q) !== -1;
+    });
+    if (matched.length === 0) {
+      searchResultsEl.innerHTML = '<div class="search-empty">검색 결과가 없습니다</div>';
+      searchResultsEl.classList.add('is-open');
+      return;
+    }
+    var typeLabels = { region: '지역', city: '도시', shop: '업체', post: '가이드', category: '카테고리' };
+    var groups = {};
+    matched.slice(0, 20).forEach(function (item) {
+      if (!groups[item.type]) groups[item.type] = [];
+      groups[item.type].push(item);
+    });
+    var html = '';
+    Object.keys(groups).forEach(function (type) {
+      html += '<div class="search-result-group">';
+      html += '<div class="search-result-label">' + escapeHtml(typeLabels[type] || type) + '</div>';
+      groups[type].forEach(function (item) {
+        html += '<a class="search-result-item" href="' + item.href + '">';
+        html += '<svg width="16" height="16"><use href="#' + item.icon + '"/></svg>';
+        html += escapeHtml(item.name);
+        if (item.parent) html += '<span class="search-result-meta">' + escapeHtml(item.parent) + '</span>';
+        html += '</a>';
+      });
+      html += '</div>';
+    });
+    searchResultsEl.innerHTML = html;
+    searchResultsEl.classList.add('is-open');
+  }
+
+  if (searchInput) {
+    searchInput.addEventListener('input', function () { performSearch(this.value.trim()); });
+    searchInput.addEventListener('focus', function () { if (this.value.trim()) performSearch(this.value.trim()); });
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest('.search-wrap')) searchResultsEl.classList.remove('is-open');
+    });
+    searchResultsEl.addEventListener('click', function (e) {
+      if (e.target.closest('.search-result-item')) {
+        searchResultsEl.classList.remove('is-open');
+        searchInput.value = '';
+        closeSidebarMobile();
+      }
+    });
+  }
+
+  document.addEventListener('keydown', function (e) {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      e.preventDefault();
+      if (searchInput) { searchInput.focus(); searchInput.select(); }
+    }
+    if (e.key === 'Escape') {
+      if (document.activeElement === searchInput) {
+        searchResultsEl.classList.remove('is-open');
+        searchInput.blur();
+      } else {
+        closeSidebar();
+      }
+    }
   });
 
   /* ============ INIT ============ */
