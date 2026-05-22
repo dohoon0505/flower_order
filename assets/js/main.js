@@ -1,6 +1,13 @@
 (function () {
   'use strict';
 
+  /* ============ UTILITIES ============ */
+  function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+  }
+
   /* ============ THEME ============ */
   function toggleTheme() {
     var body = document.body;
@@ -58,18 +65,290 @@
     if (window.matchMedia('(max-width: 1099px)').matches) closeSidebar();
   }
 
+  /* ============ STATE ============ */
+  var systemData = null;
+  var shopCache = {};
+  var postCache = {};
+
+  var homeHero = document.getElementById('home-hero');
+  var homeSections = document.querySelectorAll('.home-section, .home-empty');
+  var detailView = document.getElementById('detail-view');
+  var shopNavList = document.getElementById('shop-nav-list');
+  var blogNavList = document.getElementById('blog-nav-list');
+
+  /* ============ DATA LOADING ============ */
+  function fetchJSON(url) {
+    return fetch(url).then(function (r) {
+      if (!r.ok) throw new Error(r.status);
+      return r.json();
+    });
+  }
+
+  function loadSystem() {
+    return fetchJSON('system.json').then(function (data) {
+      systemData = data;
+      buildShopSidebar(data.shops || []);
+      buildBlogSidebar(data.posts || []);
+      buildHomeShopGrid(data.shops || []);
+      buildHomeBlogGrid(data.posts || []);
+      return data;
+    });
+  }
+
+  function loadShop(shopId) {
+    if (shopCache[shopId]) return Promise.resolve(shopCache[shopId]);
+    return fetchJSON('shops/' + shopId + '/info.json').then(function (data) {
+      shopCache[shopId] = data;
+      return data;
+    });
+  }
+
+  function loadPost(postId) {
+    if (postCache[postId]) return Promise.resolve(postCache[postId]);
+    return fetchJSON('posts/' + postId + '/post.json').then(function (data) {
+      postCache[postId] = data;
+      return data;
+    });
+  }
+
+  /* ============ SIDEBAR — SHOPS (by region) ============ */
+  function buildShopSidebar(shops) {
+    if (!shopNavList) return;
+    if (shops.length === 0) {
+      shopNavList.innerHTML = '<li class="sidebar-empty">등록된 업체가 없습니다</li>';
+      return;
+    }
+    var regionMap = {};
+    shops.forEach(function (shop) {
+      var r = shop.region || '기타';
+      if (!regionMap[r]) regionMap[r] = [];
+      regionMap[r].push(shop);
+    });
+
+    var html = '';
+    Object.keys(regionMap).forEach(function (region) {
+      var regionShops = regionMap[region];
+      html += '<li class="sidebar-expandable">';
+      html += '<a class="sidebar-link" href="#region/' + encodeURIComponent(region) + '">';
+      html += '<svg class="ico"><use href="#i-map-pin"/></svg>';
+      html += escapeHtml(region) + ' <span class="sidebar-count">' + regionShops.length + '</span>';
+      html += '<svg class="chevron" width="14" height="14"><use href="#i-chevron-down"/></svg>';
+      html += '</a>';
+      html += '<ul class="sidebar-sub">';
+      regionShops.forEach(function (shop) {
+        html += '<li><a class="sidebar-link" href="#shop/' + escapeHtml(shop.id) + '" data-section="shop/' + escapeHtml(shop.id) + '">';
+        html += escapeHtml(shop.name);
+        html += '</a></li>';
+      });
+      html += '</ul></li>';
+    });
+    shopNavList.innerHTML = html;
+  }
+
+  /* ============ SIDEBAR — BLOG POSTS ============ */
+  function buildBlogSidebar(posts) {
+    if (!blogNavList) return;
+    if (posts.length === 0) {
+      blogNavList.innerHTML = '<li class="sidebar-empty">등록된 글이 없습니다</li>';
+      return;
+    }
+    var html = '';
+    posts.forEach(function (post) {
+      html += '<li><a class="sidebar-link" href="#post/' + escapeHtml(post.id) + '" data-section="post/' + escapeHtml(post.id) + '">';
+      html += '<svg class="ico"><use href="#i-edit"/></svg>';
+      html += escapeHtml(post.title);
+      html += '</a></li>';
+    });
+    blogNavList.innerHTML = html;
+  }
+
+  /* ============ HOME — DYNAMIC GRIDS ============ */
+  function buildHomeShopGrid(shops) {
+    var grid = document.getElementById('home-shop-grid');
+    if (!grid || shops.length === 0) return;
+    var html = '';
+    shops.slice(0, 6).forEach(function (shop) {
+      html += '<a class="analysis-card" href="#shop/' + escapeHtml(shop.id) + '">';
+      html += '<div class="analysis-card-num">';
+      html += '<svg class="ico" style="width:20px;height:20px"><use href="#i-map-pin"/></svg>';
+      html += '</div>';
+      html += '<h3>' + escapeHtml(shop.name) + '</h3>';
+      html += '<p>' + escapeHtml(shop.region + (shop.area ? ' ' + shop.area : '')) + '</p>';
+      html += '</a>';
+    });
+    grid.innerHTML = html;
+  }
+
+  function buildHomeBlogGrid(posts) {
+    var grid = document.getElementById('home-blog-grid');
+    if (!grid || posts.length === 0) return;
+    var html = '';
+    posts.slice(0, 6).forEach(function (post) {
+      html += '<a class="analysis-card" href="#post/' + escapeHtml(post.id) + '">';
+      html += '<div class="analysis-card-num">';
+      if (post.category) html += escapeHtml(post.category);
+      else html += '<svg class="ico" style="width:20px;height:20px"><use href="#i-edit"/></svg>';
+      html += '</div>';
+      html += '<h3>' + escapeHtml(post.title) + '</h3>';
+      html += '<p>' + escapeHtml(post.summary || post.date || '') + '</p>';
+      html += '</a>';
+    });
+    grid.innerHTML = html;
+  }
+
+  /* ============ BLOCK RENDERERS ============ */
+  function renderBlock(block) {
+    switch (block.type) {
+      case 'heading':  return '<h2 class="blk-heading">' + escapeHtml(block.value) + '</h2>';
+      case 'text':     return '<p class="blk-text">' + escapeHtml(block.value) + '</p>';
+      case 'note':     return '<div class="blk-note"><div class="blk-note-icon">i</div><p>' + escapeHtml(block.value) + '</p></div>';
+      case 'kv':       return renderKV(block);
+      case 'image':    return renderImage(block);
+      default: return '';
+    }
+  }
+
+  function renderKV(block) {
+    var cols = block.columns || 1;
+    var h = '';
+    if (block.title) h += '<div class="blk-kv-title">' + escapeHtml(block.title) + '</div>';
+    h += '<div class="blk-kv blk-kv--col' + cols + '">';
+    (block.items || []).forEach(function (item) {
+      h += '<div class="blk-kv-item">';
+      h += '<dt>' + escapeHtml(item.label) + '</dt>';
+      h += '<dd>' + escapeHtml(item.value) + '</dd>';
+      h += '</div>';
+    });
+    h += '</div>';
+    return h;
+  }
+
+  function renderImage(block) {
+    var h = '<div class="blk-image">';
+    h += '<img src="' + escapeHtml(block.src) + '" alt="' + escapeHtml(block.alt || '') + '" loading="lazy">';
+    if (block.caption) h += '<p class="blk-image-caption">' + escapeHtml(block.caption) + '</p>';
+    h += '</div>';
+    return h;
+  }
+
+  /* ============ VIEWS ============ */
+  function showHome() {
+    if (homeHero) homeHero.style.display = '';
+    homeSections.forEach(function (s) { s.style.display = ''; });
+    if (detailView) detailView.style.display = 'none';
+    highlightSidebar('home');
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }
+
+  function hideHome() {
+    if (homeHero) homeHero.style.display = 'none';
+    homeSections.forEach(function (s) { s.style.display = 'none'; });
+  }
+
+  function showDetail(html) {
+    hideHome();
+    if (detailView) {
+      detailView.innerHTML = html;
+      detailView.style.display = '';
+    }
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }
+
+  /* ============ SHOP DETAIL ============ */
+  function renderShopDetail(shop) {
+    var h = '';
+    h += '<div class="report-header">';
+    h += '<a class="report-back" href="#">← 홈으로</a>';
+    h += '<div class="report-meta">';
+    h += '<span class="tag">' + escapeHtml(shop.region) + '</span>';
+    if (shop.area) h += '<span class="report-date">' + escapeHtml(shop.area) + '</span>';
+    h += '</div>';
+    h += '<h1 class="report-title">' + escapeHtml(shop.name) + '</h1>';
+    if (shop.summary) h += '<p class="report-summary">' + escapeHtml(shop.summary) + '</p>';
+    if (shop.url) {
+      h += '<a class="report-url" href="' + escapeHtml(shop.url) + '" target="_blank" rel="noopener noreferrer">';
+      h += '<svg class="ico"><use href="#i-link"/></svg>' + escapeHtml(shop.url);
+      h += '</a>';
+    }
+    h += '</div>';
+
+    h += '<div class="report-blocks">';
+    if (shop.blocks && shop.blocks.length > 0) {
+      shop.blocks.forEach(function (block) { h += renderBlock(block); });
+    }
+    h += '</div>';
+    return h;
+  }
+
+  /* ============ BLOG POST DETAIL ============ */
+  function renderPostDetail(post) {
+    var h = '';
+    h += '<div class="report-header">';
+    h += '<a class="report-back" href="#">← 홈으로</a>';
+    h += '<div class="report-meta">';
+    h += '<span class="tag">꽃배달 가이드</span>';
+    if (post.category) h += '<span class="report-date">' + escapeHtml(post.category) + '</span>';
+    if (post.date) h += '<span class="report-date">' + escapeHtml(post.date) + '</span>';
+    h += '</div>';
+    h += '<h1 class="report-title">' + escapeHtml(post.title) + '</h1>';
+    if (post.summary) h += '<p class="report-summary">' + escapeHtml(post.summary) + '</p>';
+    h += '</div>';
+
+    h += '<div class="report-blocks">';
+    if (post.blocks && post.blocks.length > 0) {
+      post.blocks.forEach(function (block) { h += renderBlock(block); });
+    }
+    h += '</div>';
+    return h;
+  }
+
   /* ============ SIDEBAR HIGHLIGHT ============ */
   function highlightSidebar(id) {
     document.querySelectorAll('.sidebar-link').forEach(function (l) {
       l.classList.remove('is-active');
     });
     var link = document.querySelector('.sidebar-link[data-section="' + id + '"]');
-    if (link) link.classList.add('is-active');
+    if (!link) return;
+    link.classList.add('is-active');
+    var sub = link.closest('.sidebar-sub');
+    if (sub) {
+      var exp = sub.closest('.sidebar-expandable');
+      if (exp) exp.classList.add('is-open');
+    }
   }
 
   /* ============ ROUTING ============ */
   function route() {
     var hash = location.hash.replace(/^#\/?/, '').trim();
+
+    if (!hash) {
+      showHome();
+      return;
+    }
+
+    var parts = hash.split('/');
+
+    if (parts[0] === 'shop' && parts[1]) {
+      highlightSidebar(hash);
+      loadShop(parts[1]).then(function (shop) {
+        showDetail(renderShopDetail(shop));
+      }).catch(function () {
+        showDetail('<div class="report-header"><a class="report-back" href="#">← 홈으로</a><h1 class="report-title">업체 정보를 불러올 수 없습니다</h1></div>');
+      });
+      return;
+    }
+
+    if (parts[0] === 'post' && parts[1]) {
+      highlightSidebar(hash);
+      loadPost(parts[1]).then(function (post) {
+        showDetail(renderPostDetail(post));
+      }).catch(function () {
+        showDetail('<div class="report-header"><a class="report-back" href="#">← 홈으로</a><h1 class="report-title">글을 불러올 수 없습니다</h1></div>');
+      });
+      return;
+    }
+
+    showHome();
     highlightSidebar(hash || 'home');
   }
 
@@ -77,7 +356,24 @@
   document.addEventListener('click', function (e) {
     var link = e.target.closest('.sidebar-link');
     if (!link) return;
-    closeSidebarMobile();
+
+    var parent = link.parentElement;
+    if (parent && parent.classList.contains('sidebar-expandable')) {
+      var targetHash = link.getAttribute('href') || '';
+      var currentHash = location.hash || '';
+      if (targetHash === currentHash || '#' + targetHash === currentHash) {
+        e.preventDefault();
+        parent.classList.toggle('is-open');
+        return;
+      }
+      parent.classList.add('is-open');
+    }
+
+    if (link.closest('.sidebar-sub')) {
+      closeSidebarMobile();
+    } else if (!parent || !parent.classList.contains('sidebar-expandable')) {
+      closeSidebarMobile();
+    }
   });
 
   document.addEventListener('keydown', function (e) {
@@ -104,9 +400,17 @@
   /* ============ INIT ============ */
   window.addEventListener('hashchange', route);
 
+  function init() {
+    loadSystem().then(function () {
+      route();
+    }).catch(function () {
+      route();
+    });
+  }
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', route);
+    document.addEventListener('DOMContentLoaded', init);
   } else {
-    route();
+    init();
   }
 })();

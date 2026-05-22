@@ -2,7 +2,7 @@
   "name": "flower-order",
   "fullName": "꽃배달 직배송 · 신선한 꽃을 산지에서 바로",
   "version": "1.0.0",
-  "description": "농장에서 당일 수확한 꽃을 중간 유통 없이 직접 배송하는 꽃배달 직배송 플랫폼.",
+  "description": "농장에서 당일 수확한 꽃을 중간 유통 없이 직접 배송하는 꽃배달 직배송 플랫폼. 지역별 직배송 업체를 소개하고 꽃배달 가이드를 제공합니다.",
   "entry": {
     "ai": "AGENTS.md",
     "human": "CLAUDE.md",
@@ -20,10 +20,11 @@
     "nextDay": "전국 익일 오전 배송",
     "packaging": "꽃 전용 보냉 박스 + 수분 유지 시스템"
   },
-  "references": [],
-  "analysisSections": [],
+  "regions": ["서울", "경기/인천", "부산/경남", "대구/경북", "광주/전남", "대전/충남", "강원", "제주"],
+  "shops": [],
+  "posts": [],
   "counts": {
-    "references": 0,
-    "totalComponents": 0
+    "shops": 0,
+    "posts": 0
   }
 }

@@ -5,8 +5,8 @@
  *
  * 검증 항목:
  * 1. system.json 파싱 + 필수 필드 존재
- * 2. system.json.references[].id 와 analyses/{id}/ 폴더 일치
- * 3. analyses/{id}/analysis.json 파싱 + 필수 필드
+ * 2. system.json.shops[].id 와 shops/{id}/ 폴더 일치
+ * 3. system.json.posts[].id 와 posts/{id}/ 폴더 일치
  * 4. 필수 파일 존재 확인
  */
 
@@ -30,55 +30,62 @@ function readJSON(relPath) {
   catch (e) { fail('JSON 파싱 실패 (' + relPath + '): ' + e.message); return null; }
 }
 
+function validateDir(label, items, dirName, fileName) {
+  const registeredIds = new Set(items.map(function (s) { return s.id; }));
+
+  for (const item of items) {
+    if (!item.id) { fail(label + '에 id 없음'); continue; }
+    if (!item.name && !item.title) warn(item.id + ': name/title 필드 없음');
+
+    const dir = join(ROOT, dirName, item.id);
+    if (!existsSync(dir)) {
+      fail(item.id + ': ' + dirName + '/' + item.id + '/ 폴더 없음');
+      continue;
+    }
+
+    const data = readJSON(dirName + '/' + item.id + '/' + fileName);
+    if (!data) continue;
+    if (data.id !== item.id) {
+      fail(item.id + ': ' + fileName + '의 id "' + data.id + '" !== system.json의 "' + item.id + '"');
+    }
+  }
+
+  const parentDir = join(ROOT, dirName);
+  if (existsSync(parentDir)) {
+    try {
+      const dirs = readdirSync(parentDir, { withFileTypes: true })
+        .filter(function (d) { return d.isDirectory(); })
+        .map(function (d) { return d.name; });
+      for (const d of dirs) {
+        if (!registeredIds.has(d)) {
+          warn(dirName + '/' + d + '/ 가 system.json에 미등재');
+        }
+      }
+    } catch (e) {
+      warn(dirName + '/ 디렉터리 읽기 실패: ' + e.message);
+    }
+  }
+}
+
 // 1. system.json
 const system = readJSON('system.json');
 if (!system) process.exit(1);
 
 if (!system.name) fail('system.json: name 필드 없음');
 if (!system.version) fail('system.json: version 필드 없음');
-var categories = system.categories || [];
+
+const categories = system.categories || [];
 ok('system.json — ' + categories.length + '개 상품 카테고리 정의');
 
-// 2. references 검증
-const refs = system.references || [];
-ok('system.json — ' + refs.length + '개 레퍼런스 등재');
+// 2. shops 검증
+const shops = system.shops || [];
+ok('system.json — ' + shops.length + '개 업체 등재');
+if (shops.length > 0) validateDir('업체', shops, 'shops', 'info.json');
 
-const registeredIds = new Set(refs.map(function (r) { return r.id; }));
-
-for (const ref of refs) {
-  if (!ref.id) { fail('reference에 id 없음'); continue; }
-  if (!ref.title) warn(ref.id + ': title 필드 없음');
-  if (!ref.url) warn(ref.id + ': url 필드 없음');
-
-  const dir = join(ROOT, 'analyses', ref.id);
-  if (!existsSync(dir)) {
-    fail(ref.id + ': analyses/' + ref.id + '/ 폴더 없음');
-    continue;
-  }
-
-  const analysis = readJSON('analyses/' + ref.id + '/analysis.json');
-  if (!analysis) continue;
-  if (analysis.id !== ref.id) {
-    fail(ref.id + ': analysis.json의 id "' + analysis.id + '" !== system.json의 "' + ref.id + '"');
-  }
-}
-
-// 3. analyses/ 폴더에 있으나 system.json에 미등재 확인
-const analysesDir = join(ROOT, 'analyses');
-if (existsSync(analysesDir)) {
-  try {
-    const dirs = readdirSync(analysesDir, { withFileTypes: true })
-      .filter(function (d) { return d.isDirectory(); })
-      .map(function (d) { return d.name; });
-    for (const d of dirs) {
-      if (!registeredIds.has(d)) {
-        warn('analyses/' + d + '/ 가 system.json에 미등재');
-      }
-    }
-  } catch (e) {
-    warn('analyses/ 디렉터리 읽기 실패: ' + e.message);
-  }
-}
+// 3. posts 검증
+const posts = system.posts || [];
+ok('system.json — ' + posts.length + '개 블로그 글 등재');
+if (posts.length > 0) validateDir('블로그 글', posts, 'posts', 'post.json');
 
 // 4. 필수 파일 존재
 ['index.html', 'assets/css/main.css', 'assets/js/main.js'].forEach(function (f) {

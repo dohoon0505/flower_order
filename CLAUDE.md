@@ -4,7 +4,7 @@
 
 ## 프로젝트 개요
 
-농장에서 당일 수확한 꽃을 중간 유통 없이 직접 배송하는 꽃배달 직배송 플랫폼입니다. 생화 꽃다발, 꽃바구니, 화환·근조, 관엽식물, 특별 기획 등 다양한 상품을 전국 어디든 신선하게 배송합니다.
+농장에서 당일 수확한 꽃을 중간 유통 없이 직접 배송하는 꽃배달 직배송 플랫폼입니다. 전국 각 지역의 직배송 가능한 꽃배달 업체를 소개하고, 꽃에 대한 유용한 정보를 블로그(꽃배달 가이드)로 제공합니다.
 
 ## 3계층 동시 갱신
 
@@ -13,20 +13,34 @@
 | 계층 | 위치 | 역할 |
 |------|------|------|
 | **운영 소스** | `index.html`, `assets/css/main.css`, `assets/js/main.js` | 실제 동작하는 셸과 로직 |
-| **데이터 매니페스트** | `system.json` | 시스템 메타데이터 (카테고리, 배송 정보) |
+| **데이터** | `system.json`, `shops/{id}/info.json`, `posts/{slug}/post.json` | 시스템 메타데이터 + 업체/블로그 데이터 |
 | **문서** | `README.md`, `AGENTS.md`, 본 파일 | 기여자/에이전트 가이드 |
 
-예시: 새 상품 카테고리 추가 시 → `system.json.categories[]` 추가 + 사이드바 반영 + 문서 갱신.
+## 업체 추가 절차
+
+1. `shops/{id}/info.json` 작성 (필수: `id`, `name`, `region`)
+2. `system.json.shops[]` 배열에 엔트리 추가
+3. `system.json.counts.shops` 갱신
+4. `node scripts/validate.mjs` 실행
+
+## 블로그 글 추가 절차
+
+1. `posts/{slug}/post.json` 작성 (필수: `id`, `title`, `date`, `blocks[]`)
+2. `system.json.posts[]` 배열에 엔트리 추가
+3. `system.json.counts.posts` 갱신
+4. `node scripts/validate.mjs` 실행
 
 ## 컨벤션
 
 ### 파일 경로
 - 단일 진입점: `index.html`
 - 정적 자원: `assets/css/`, `assets/js/`
+- 업체 데이터: `shops/{id}/` (id는 슬러그)
+- 블로그 데이터: `posts/{slug}/` (slug는 슬러그)
 - 스크립트: `scripts/` (ESM, Node 18+)
 
 ### 네이밍
-- 카테고리 ID: `^[a-z0-9][a-z0-9-]*$` (영소문자 시작, 영소문자/숫자/하이픈만)
+- ID/슬러그: `^[a-z0-9][a-z0-9-]*$` (영소문자 시작, 영소문자/숫자/하이픈만)
 - 날짜: ISO 8601 (`YYYY-MM-DD`)
 - 색상: hex (`#RRGGBB` 또는 `#RRGGBBAA`)
 
@@ -50,15 +64,16 @@ node scripts/validate.mjs
 ```
 
 수정 시 예상되는 동작:
+- `system.json` 등록과 실제 폴더가 어긋나면 error
+- 폴더는 있는데 등록 안 됨 → warning
 - 필수 필드 누락 → error
-- 필수 파일 미존재 → error
 
 ## 브라우저 호환
 - 최신 evergreen (Chrome, Firefox, Safari, Edge)
 - ES2018+ 문법 허용
 
 ## 기여 절차
-1. 변경하려는 영역 식별 (셸/데이터/문서)
+1. 변경하려는 영역 식별 (소스/데이터/문서)
 2. 위 3계층 중 영향받는 모든 계층을 같은 커밋으로 묶기
 3. `scripts/validate.mjs` 통과 확인
 4. `index.html`을 브라우저에서 열어 라이트/다크 + 모바일 토글 동작 확인
