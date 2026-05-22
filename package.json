@@ -1,7 +1,7 @@
 {
   "name": "flower-order",
   "version": "1.0.0",
-  "description": "꽃배달 직배송 플랫폼. 농장에서 당일 수확한 꽃을 중간 유통 없이 직접 배송.",
+  "description": "전국꽃배달 안내소. 농장에서 당일 수확한 꽃을 중간 유통 없이 직접 배송.",
   "main": "index.html",
   "type": "module",
   "scripts": {
