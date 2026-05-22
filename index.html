@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Web Reference Lab — 웹 디자인 레퍼런스 연구소</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body data-theme="light">
+
+<!-- ============ ICON SPRITE ============ -->
+<svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
+  <defs>
+    <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round">
+      <path d="M3 10.5L12 3l9 7.5V20a1 1 0 01-1 1h-5v-7h-6v7H4a1 1 0 01-1-1v-9.5z"/>
+    </symbol>
+    <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>
+    </symbol>
+    <symbol id="i-link" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
+    </symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+    </symbol>
+    <symbol id="i-chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M6 9l6 6 6-6"/>
+    </symbol>
+    <symbol id="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 6L6 18M6 6l12 12"/>
+    </symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 6h18M3 12h18M3 18h18"/>
+    </symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 5v14M5 12h14"/>
+    </symbol>
+    <symbol id="i-arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M5 12h14M12 5l7 7-7 7"/>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- ============ SIDEBAR TOGGLE (mobile) ============ -->
+<button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="네비게이션 열기">
+  <svg width="20" height="20"><use href="#i-menu"/></svg>
+</button>
+<div class="sidebar-scrim" onclick="closeSidebar()"></div>
+
+<!-- ============ SIDEBAR ============ -->
+<aside class="sidebar" id="sidebar">
+  <a class="sidebar-brand" href="#">
+    <div class="brand-mark">WR</div>
+    <div>
+      <div class="brand-name">Reference Lab</div>
+      <div class="brand-ver">v0.0.0</div>
+    </div>
+  </a>
+
+  <!-- Home -->
+  <div class="sidebar-group">
+    <ul class="sidebar-nav">
+      <li><a class="sidebar-link is-active" href="#" data-section="home">
+        <svg class="ico"><use href="#i-home"/></svg>홈</a></li>
+    </ul>
+  </div>
+
+  <!-- References (dynamically populated) -->
+  <div class="sidebar-group" id="sidebar-references">
+    <div class="sidebar-group-title">레퍼런스 보고서</div>
+    <ul class="sidebar-nav" id="ref-nav-list">
+      <li class="sidebar-empty">분석된 레퍼런스가 없습니다</li>
+    </ul>
+  </div>
+
+  <!-- Theme toggle -->
+  <div class="sidebar-theme">
+    <div>
+      <div class="sidebar-theme-label">테마</div>
+      <div class="sidebar-theme-sub" id="theme-sub">Light Mode</div>
+    </div>
+    <button class="sidebar-theme-btn" onclick="toggleTheme()" aria-label="테마 전환">
+      <span id="sidebar-theme-icon">☾</span>
+      <span id="sidebar-theme-label">Dark</span>
+    </button>
+  </div>
+</aside>
+
+<!-- ============ TOPBAR ============ -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="#">
+      <div class="brand-mark">WR</div>
+      <div class="brand-text">Web Reference Lab</div>
+    </a>
+    <nav class="topbar-nav">
+      <button class="theme-toggle" onclick="toggleTheme()">
+        <span id="theme-icon">☾</span>
+        <span id="theme-label">Dark</span>
+      </button>
+    </nav>
+  </div>
+</header>
+
+<!-- ============ MAIN CONTENT ============ -->
+<div class="container" id="top">
+
+  <!-- HOME -->
+  <section class="hero" id="home-hero">
+    <div class="hero-meta">
+      <span class="tag">WEB REFERENCE LAB</span>
+    </div>
+    <h1>웹 디자인을<br>해부합니다.</h1>
+    <p class="hero-desc">
+      실제 운영 중인 웹사이트의 디자인 시스템을 연구원 수준으로 분석합니다.<br>
+      레이아웃, 타이포그래피, 컬러, 컴포넌트, 인터랙션, 스크롤, 둥글기, 여백 — 모든 시각적 결정을 구조화하여 하나의 레퍼런스 보고서로 정리합니다.
+    </p>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="home-section">
+    <h2 class="home-section-title">분석 항목</h2>
+    <p class="home-section-desc">각 웹사이트에 대해 다음 10가지 관점에서 심층 분석합니다.</p>
+    <div class="analysis-grid">
+      <div class="analysis-card">
+        <div class="analysis-card-num">01</div>
+        <h3>개요</h3>
+        <p>URL, 기술 스택, 전반적인 디자인 방향성과 인상 평가</p>
+      </div>
+      <div class="analysis-card">
+        <div class="analysis-card-num">02</div>
+        <h3>레이아웃 & 그리드</h3>
+        <p>max-width, 컬럼 구조, 브레이크포인트, 섹션 간격, 콘텐츠 영역 비율</p>
+      </div>
+      <div class="analysis-card">
+        <div class="analysis-card-num">03</div>
+        <h3>타이포그래피</h3>
+        <p>폰트 패밀리, 사이즈 스케일, 행간, 자간, 웨이트 시스템, 계층 구조</p>
+      </div>
+      <div class="analysis-card">
+        <div class="analysis-card-num">04</div>
+        <h3>컬러 시스템</h3>
+        <p>프라이머리·세컨더리·배경·텍스트·액센트 컬러, 전체 팔레트 추출</p>
+      </div>
+      <div class="analysis-card">
+        <div class="analysis-card-num">05</div>
+        <h3>컴포넌트</h3>
+        <p>버튼, 카드, 네비게이션, 폼, 모달 등 개별 UI 요소의 구조와 변형</p>
+      </div>
+      <div class="analysis-card">
+        <div class="analysis-card-num">06</div>
+        <h3>인터랙션</h3>
+        <p>hover 효과, 전환 애니메이션, 마이크로 인터랙션, 트리거 패턴</p>
+      </div>
+      <div class="analysis-card">
+        <div class="analysis-card-num">07</div>
+        <h3>스크롤 행동</h3>
+        <p>패럴랙스, sticky 요소, 스크롤 기반 애니메이션, 무한 스크롤</p>
+      </div>
+      <div class="analysis-card">
+        <div class="analysis-card-num">08</div>
+        <h3>둥글기 패턴</h3>
+        <p>border-radius 사용 체계, 요소별 곡률, 일관성 분석</p>
+      </div>
+      <div class="analysis-card">
+        <div class="analysis-card-num">09</div>
+        <h3>여백 시스템</h3>
+        <p>margin·padding 패턴, 간격 스케일, 섹션 간 리듬</p>
+      </div>
+      <div class="analysis-card">
+        <div class="analysis-card-num">10</div>
+        <h3>접근성</h3>
+        <p>명도 대비, 키보드 내비게이션, ARIA, 포커스 관리, 반응형 대응</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- EMPTY STATE -->
+  <section class="home-section home-empty">
+    <div class="empty-icon">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>
+      </svg>
+    </div>
+    <h2>첫 번째 레퍼런스를 분석해보세요</h2>
+    <p>URL을 전달하면 AI가 웹사이트를 분석하고,<br>좌측 사이드바에 레퍼런스 보고서가 추가됩니다.</p>
+    <div class="empty-example">
+      <code>https://miracell.co.kr/kr</code>
+      <svg class="ico"><use href="#i-arrow-right"/></svg>
+      <span>미라셀 레퍼런스 보고서</span>
+    </div>
+  </section>
+
+  <!-- REPORT VIEW (dynamically populated by JS) -->
+  <section id="report-view" style="display:none;"></section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-inner">
+      <div>Web Reference Lab · v0.0.0 · 웹 디자인 레퍼런스 연구소</div>
+      <div class="footer-sig">MAINTAINED BY /DH · 2026</div>
+    </div>
+  </footer>
+
+</div>
+
+<script src="assets/js/main.js"></script>
+</body>
+</html>

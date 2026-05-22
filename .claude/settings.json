@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+
+  "permissions": {
+  "allow": [
+    "Bash(git push*)",
+    "Bash(git push -u*)",
+    "Bash(git commit*)",
+    "Bash(git add*)"
+  ]
+},
+  
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/auto-commit-push.sh",
+            "shell": "bash",
+            "timeout": 60,
+            "statusMessage": "Auto-committing & pushing changes..."
+          }
+        ]
+      }
+    ]
+  }
+}
