@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 /**
- * Web Reference Lab — Validator
+ * 꽃배달 직배송 플랫폼 — Validator
  * Usage: node scripts/validate.mjs
  *
  * 검증 항목:
  * 1. system.json 파싱 + 필수 필드 존재
  * 2. system.json.references[].id 와 analyses/{id}/ 폴더 일치
  * 3. analyses/{id}/analysis.json 파싱 + 필수 필드
- * 4. analysisSections 정의 존재 (10개)
+ * 4. 필수 파일 존재 확인
  */
 
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
@@ -36,11 +36,8 @@ if (!system) process.exit(1);
 
 if (!system.name) fail('system.json: name 필드 없음');
 if (!system.version) fail('system.json: version 필드 없음');
-if (!system.analysisSections || !system.analysisSections.length) {
-  fail('system.json: analysisSections 배열 없음');
-} else {
-  ok('system.json — ' + system.analysisSections.length + '개 분석 섹션 정의');
-}
+var categories = system.categories || [];
+ok('system.json — ' + categories.length + '개 상품 카테고리 정의');
 
 // 2. references 검증
 const refs = system.references || [];

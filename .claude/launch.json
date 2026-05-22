@@ -2,7 +2,7 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "web-reference-lab",
+      "name": "flower-order",
       "runtimeExecutable": "powershell",
       "runtimeArgs": ["-ExecutionPolicy", "Bypass", "-File", "scripts/serve.ps1"],
       "port": 8080

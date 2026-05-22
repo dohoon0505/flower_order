@@ -1,10 +1,10 @@
 # CLAUDE.md — 기여 가이드라인
 
-본 프로젝트(Web Reference Lab)에 변경을 가할 때 따라야 할 원칙입니다.
+본 프로젝트(꽃배달 직배송 플랫폼)에 변경을 가할 때 따라야 할 원칙입니다.
 
 ## 프로젝트 개요
 
-실제 운영 중인 웹사이트의 디자인 시스템을 연구원 수준으로 분석하는 레퍼런스 카탈로그입니다. URL을 전달하면 10가지 관점(개요, 레이아웃, 타이포그래피, 컬러, 컴포넌트, 인터랙션, 스크롤, 둥글기, 여백, 접근성)에서 심층 분석한 레퍼런스 보고서를 생성합니다.
+농장에서 당일 수확한 꽃을 중간 유통 없이 직접 배송하는 꽃배달 직배송 플랫폼입니다. 생화 꽃다발, 꽃바구니, 화환·근조, 관엽식물, 특별 기획 등 다양한 상품을 전국 어디든 신선하게 배송합니다.
 
 ## 3계층 동시 갱신
 
@@ -13,21 +13,20 @@
 | 계층 | 위치 | 역할 |
 |------|------|------|
 | **운영 소스** | `index.html`, `assets/css/main.css`, `assets/js/main.js` | 실제 동작하는 셸과 로직 |
-| **데이터 매니페스트** | `system.json`, `analyses/{id}/analysis.json` | 시스템 메타데이터 + 분석 결과 |
+| **데이터 매니페스트** | `system.json` | 시스템 메타데이터 (카테고리, 배송 정보) |
 | **문서** | `README.md`, `AGENTS.md`, 본 파일 | 기여자/에이전트 가이드 |
 
-예시: 새 레퍼런스 분석 추가 시 → `system.json.references[]` 추가 + `analyses/{id}/analysis.json` 생성 + 사이드바 자동 반영.
+예시: 새 상품 카테고리 추가 시 → `system.json.categories[]` 추가 + 사이드바 반영 + 문서 갱신.
 
 ## 컨벤션
 
 ### 파일 경로
 - 단일 진입점: `index.html`
 - 정적 자원: `assets/css/`, `assets/js/`
-- 분석 데이터: `analyses/{id}/` (id는 슬러그)
 - 스크립트: `scripts/` (ESM, Node 18+)
 
 ### 네이밍
-- 분석 ID: `^[a-z0-9][a-z0-9-]*$` (영소문자 시작, 영소문자/숫자/하이픈만)
+- 카테고리 ID: `^[a-z0-9][a-z0-9-]*$` (영소문자 시작, 영소문자/숫자/하이픈만)
 - 날짜: ISO 8601 (`YYYY-MM-DD`)
 - 색상: hex (`#RRGGBB` 또는 `#RRGGBBAA`)
 
@@ -41,9 +40,8 @@
 - HTML 삽입 시 사용자 데이터는 반드시 `escapeHtml()` 적용
 
 ## 안전 / 보안
-- `analysis.json`의 사용자 제공 텍스트(`url`, `title`, `summary` 등)는 모두 escape 후 렌더링.
+- 사용자 제공 텍스트는 모두 escape 후 렌더링.
 - 외부 링크는 `target="_blank" rel="noopener noreferrer"` 적용.
-- 스크린샷 등 외부 자원은 분석 폴더 내 상대 경로로만 참조.
 
 ## 검증
 
@@ -52,9 +50,8 @@ node scripts/validate.mjs
 ```
 
 수정 시 예상되는 동작:
-- `system.json` 등록과 실제 폴더가 어긋나면 error
-- 폴더는 있는데 등록 안 됨 → warning
 - 필수 필드 누락 → error
+- 필수 파일 미존재 → error
 
 ## 브라우저 호환
 - 최신 evergreen (Chrome, Firefox, Safari, Edge)
