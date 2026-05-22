@@ -447,55 +447,90 @@
     observer.observe(card);
   });
 
-  /* ============ SEARCH ============ */
-  var searchInput = document.getElementById('search-input');
-  var searchResultsEl = document.getElementById('search-results');
+  /* ============ SEARCH (modal, GitBook-style) ============ */
+  var searchModal = document.getElementById('search-modal');
+  var searchModalInput = document.getElementById('search-modal-input');
+  var searchModalResults = document.getElementById('search-modal-results');
+  var searchModalBackdrop = document.getElementById('search-modal-backdrop');
+  var focusedResultIndex = -1;
 
-  function getSearchableItems() {
-    if (!systemData) return [];
+  function buildSearchIndex() {
     var items = [];
-    (systemData.regions || []).forEach(function (region) {
-      items.push({ type: 'region', name: region.name, parent: '', href: '#region/' + encodeURIComponent(region.name), icon: 'i-map-pin' });
-      if (region.cities) {
-        region.cities.forEach(function (city) {
-          items.push({ type: 'city', name: city, parent: region.name, href: '#region/' + encodeURIComponent(region.name) + '/' + encodeURIComponent(city), icon: 'i-map-pin' });
-        });
+    if (systemData) {
+      (systemData.regions || []).forEach(function (region) {
+        items.push({ type: 'region', name: region.name, parent: '', href: '#region/' + encodeURIComponent(region.name), icon: 'i-map-pin' });
+        if (region.cities) {
+          region.cities.forEach(function (city) {
+            items.push({ type: 'city', name: city, parent: region.name, href: '#region/' + encodeURIComponent(region.name) + '/' + encodeURIComponent(city), icon: 'i-map-pin' });
+          });
+        }
+      });
+      (systemData.shops || []).forEach(function (shop) {
+        items.push({ type: 'shop', name: shop.name, parent: shop.region || '', href: '#shop/' + shop.id, icon: 'i-store' });
+      });
+      (systemData.posts || []).forEach(function (post) {
+        items.push({ type: 'post', name: post.title, parent: post.summary || post.category || '', href: '#post/' + post.id, icon: 'i-edit' });
+      });
+      (systemData.categories || []).forEach(function (cat) {
+        items.push({ type: 'category', name: cat.title, parent: cat.desc || '', href: '#category/' + cat.id, icon: 'i-flower' });
+      });
+      var d = systemData.delivery;
+      if (d) {
+        if (d.sameDay) items.push({ type: 'delivery', name: '당일 배송', parent: d.sameDay, href: '#', icon: 'i-truck' });
+        if (d.nextDay) items.push({ type: 'delivery', name: '익일 배송', parent: d.nextDay, href: '#', icon: 'i-truck' });
+        if (d.packaging) items.push({ type: 'delivery', name: '포장', parent: d.packaging, href: '#', icon: 'i-truck' });
       }
-    });
-    (systemData.shops || []).forEach(function (shop) {
-      items.push({ type: 'shop', name: shop.name, parent: shop.region || '', href: '#shop/' + shop.id, icon: 'i-store' });
-    });
-    (systemData.posts || []).forEach(function (post) {
-      items.push({ type: 'post', name: post.title, parent: post.category || '', href: '#post/' + post.id, icon: 'i-edit' });
-    });
-    (systemData.categories || []).forEach(function (cat) {
-      items.push({ type: 'category', name: cat.title, parent: cat.desc || '', href: '#category/' + cat.id, icon: 'i-flower' });
+    }
+    // Static page content
+    var hero = document.getElementById('home-hero');
+    if (hero) {
+      var h1 = hero.querySelector('h1');
+      var heroDesc = hero.querySelector('.hero-desc');
+      if (h1) items.push({ type: 'page', name: h1.textContent.replace(/\s+/g, ' ').trim(), parent: heroDesc ? heroDesc.textContent.replace(/\s+/g, ' ').trim() : '', href: '#', icon: 'i-home' });
+    }
+    document.querySelectorAll('.home-section').forEach(function (section) {
+      var sectionId = section.id;
+      var title = section.querySelector('.home-section-title');
+      var desc = section.querySelector('.home-section-desc');
+      if (title) {
+        items.push({ type: 'page', name: title.textContent.trim(), parent: desc ? desc.textContent.trim() : '', href: sectionId ? '#' + sectionId : '#', icon: 'i-book' });
+      }
+      section.querySelectorAll('.analysis-card').forEach(function (card) {
+        var h3 = card.querySelector('h3');
+        var p = card.querySelector('p');
+        if (h3) {
+          items.push({ type: 'content', name: h3.textContent.trim(), parent: p ? p.textContent.trim() : (title ? title.textContent.trim() : ''), href: sectionId ? '#' + sectionId : '#', icon: 'i-flower' });
+        }
+      });
+      var emptyH2 = section.querySelector('.home-empty h2');
+      var emptyP = section.querySelector('.home-empty p');
+      if (emptyH2) {
+        items.push({ type: 'page', name: emptyH2.textContent.trim(), parent: emptyP ? emptyP.textContent.replace(/\s+/g, ' ').trim() : '', href: sectionId ? '#' + sectionId : '#', icon: 'i-truck' });
+      }
     });
     return items;
   }
 
-  function performSearch(query) {
-    if (!searchResultsEl) return;
+  function performModalSearch(query) {
+    if (!searchModalResults) return;
+    focusedResultIndex = -1;
     if (!query) {
-      searchResultsEl.classList.remove('is-open');
-      document.body.classList.remove('is-searching');
+      searchModalResults.innerHTML = '<div class="search-modal-empty">검색어를 입력하세요</div>';
       return;
     }
-    document.body.classList.add('is-searching');
-    var items = getSearchableItems();
+    var items = buildSearchIndex();
     var q = query.toLowerCase();
     var matched = items.filter(function (item) {
       return item.name.toLowerCase().indexOf(q) !== -1 ||
-             item.parent.toLowerCase().indexOf(q) !== -1;
+             (item.parent && item.parent.toLowerCase().indexOf(q) !== -1);
     });
     if (matched.length === 0) {
-      searchResultsEl.innerHTML = '<div class="search-empty">검색 결과가 없습니다</div>';
-      searchResultsEl.classList.add('is-open');
+      searchModalResults.innerHTML = '<div class="search-modal-empty">검색 결과가 없습니다</div>';
       return;
     }
-    var typeLabels = { region: '지역', city: '도시', shop: '업체', post: '가이드', category: '카테고리' };
+    var typeLabels = { region: '지역', city: '도시', shop: '업체', post: '가이드', category: '카테고리', page: '페이지', content: '콘텐츠', delivery: '배송' };
     var groups = {};
-    matched.slice(0, 20).forEach(function (item) {
+    matched.slice(0, 40).forEach(function (item) {
       if (!groups[item.type]) groups[item.type] = [];
       groups[item.type].push(item);
     });
@@ -512,35 +547,79 @@
       });
       html += '</div>';
     });
-    searchResultsEl.innerHTML = html;
-    searchResultsEl.classList.add('is-open');
+    searchModalResults.innerHTML = html;
   }
 
-  if (searchInput) {
-    searchInput.addEventListener('input', function () { performSearch(this.value.trim()); });
-    searchInput.addEventListener('focus', function () { if (this.value.trim()) performSearch(this.value.trim()); });
-    document.addEventListener('click', function (e) {
-      if (!e.target.closest('.search-wrap')) searchResultsEl.classList.remove('is-open');
+  function openSearchModal() {
+    if (!searchModal) return;
+    searchModal.classList.add('is-open');
+    searchModal.setAttribute('aria-hidden', 'false');
+    searchModalInput.value = '';
+    searchModalResults.innerHTML = '<div class="search-modal-empty">검색어를 입력하세요</div>';
+    setTimeout(function () { searchModalInput.focus(); }, 40);
+  }
+
+  function closeSearchModal() {
+    if (!searchModal) return;
+    searchModal.classList.remove('is-open');
+    searchModal.setAttribute('aria-hidden', 'true');
+  }
+
+  window.openSearchModal = openSearchModal;
+  window.closeSearchModal = closeSearchModal;
+
+  function updateFocusedResult() {
+    var items = searchModalResults.querySelectorAll('.search-result-item');
+    items.forEach(function (item, i) {
+      item.classList.toggle('is-focused', i === focusedResultIndex);
     });
-    searchResultsEl.addEventListener('click', function (e) {
-      if (e.target.closest('.search-result-item')) {
-        searchResultsEl.classList.remove('is-open');
-        document.body.classList.remove('is-searching');
-        searchInput.value = '';
+    if (focusedResultIndex >= 0 && items[focusedResultIndex]) {
+      items[focusedResultIndex].scrollIntoView({ block: 'nearest' });
+    }
+  }
+
+  if (searchModalInput) {
+    searchModalInput.addEventListener('input', function () {
+      performModalSearch(this.value.trim());
+    });
+    searchModalInput.addEventListener('keydown', function (e) {
+      var items = searchModalResults.querySelectorAll('.search-result-item');
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        focusedResultIndex = Math.min(focusedResultIndex + 1, items.length - 1);
+        updateFocusedResult();
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        focusedResultIndex = Math.max(focusedResultIndex - 1, 0);
+        updateFocusedResult();
+      } else if (e.key === 'Enter' && focusedResultIndex >= 0 && items[focusedResultIndex]) {
+        e.preventDefault();
+        items[focusedResultIndex].click();
+      }
+    });
+  }
+
+  if (searchModal) {
+    searchModal.addEventListener('click', function (e) {
+      var item = e.target.closest('.search-result-item');
+      if (item) {
+        closeSearchModal();
         closeSidebarMobile();
       }
     });
+  }
+  if (searchModalBackdrop) {
+    searchModalBackdrop.addEventListener('click', closeSearchModal);
   }
 
   document.addEventListener('keydown', function (e) {
     if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
       e.preventDefault();
-      if (searchInput) { searchInput.focus(); searchInput.select(); }
+      openSearchModal();
     }
     if (e.key === 'Escape') {
-      if (document.activeElement === searchInput) {
-        searchResultsEl.classList.remove('is-open');
-        searchInput.blur();
+      if (searchModal && searchModal.classList.contains('is-open')) {
+        closeSearchModal();
       } else {
         closeSidebar();
       }
