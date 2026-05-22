@@ -196,9 +196,9 @@ body {
 
 .sidebar-group { padding: var(--size-400) var(--size-500) var(--size-200); }
 .sidebar-group-title {
-  font: 700 10px/1 var(--font-sans);
+  font: 700 12px/1 var(--font-sans);
   color: var(--sm-content-tertiary);
-  letter-spacing: 0.12em; text-transform: uppercase;
+  letter-spacing: -0.015em;
   margin: 0 0 var(--size-300); padding: 0 var(--size-300);
 }
 
