@@ -349,6 +349,10 @@
       var exp = sub.closest('.sidebar-expandable');
       if (exp) exp.classList.add('is-open');
     }
+    var group = link.closest('.sidebar-group');
+    if (group && group.classList.contains('is-collapsed')) {
+      group.classList.remove('is-collapsed');
+    }
   }
 
   /* ============ ROUTING ============ */
@@ -396,6 +400,12 @@
 
   /* ============ SIDEBAR INTERACTIONS ============ */
   document.addEventListener('click', function (e) {
+    var groupTitle = e.target.closest('.sidebar-group-title');
+    if (groupTitle && groupTitle.parentElement.classList.contains('sidebar-group')) {
+      groupTitle.parentElement.classList.toggle('is-collapsed');
+      return;
+    }
+
     var link = e.target.closest('.sidebar-link');
     if (!link) return;
 
@@ -466,7 +476,12 @@
 
   function performSearch(query) {
     if (!searchResultsEl) return;
-    if (!query) { searchResultsEl.classList.remove('is-open'); return; }
+    if (!query) {
+      searchResultsEl.classList.remove('is-open');
+      document.body.classList.remove('is-searching');
+      return;
+    }
+    document.body.classList.add('is-searching');
     var items = getSearchableItems();
     var q = query.toLowerCase();
     var matched = items.filter(function (item) {
@@ -510,6 +525,7 @@
     searchResultsEl.addEventListener('click', function (e) {
       if (e.target.closest('.search-result-item')) {
         searchResultsEl.classList.remove('is-open');
+        document.body.classList.remove('is-searching');
         searchInput.value = '';
         closeSidebarMobile();
       }

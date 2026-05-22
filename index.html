@@ -90,20 +90,10 @@
   </defs>
 </svg>
 
-<!-- ============ TOPBAR / SEARCH ============ -->
-<header class="topbar" id="topbar">
-  <button class="topbar-toggle" onclick="toggleSidebar()" aria-label="네비게이션 열기">
-    <svg width="20" height="20"><use href="#i-menu"/></svg>
-  </button>
-  <div class="search-wrap">
-    <div class="search-bar" id="search-bar">
-      <svg width="16" height="16"><use href="#i-search"/></svg>
-      <input type="text" class="search-input" id="search-input" placeholder="검색..." autocomplete="off">
-      <kbd class="search-kbd">Ctrl K</kbd>
-    </div>
-    <div class="search-results" id="search-results"></div>
-  </div>
-</header>
+<!-- ============ SIDEBAR TOGGLE (mobile) ============ -->
+<button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="네비게이션 열기">
+  <svg width="20" height="20"><use href="#i-menu"/></svg>
+</button>
 <div class="sidebar-scrim" onclick="closeSidebar()"></div>
 
 <!-- ============ SIDEBAR ============ -->
@@ -116,56 +106,83 @@
     </div>
   </a>
 
-  <!-- 홈 -->
-  <div class="sidebar-group">
-    <ul class="sidebar-nav">
-      <li><a class="sidebar-link is-active" href="#" data-section="home">
-        <svg class="ico"><use href="#i-home"/></svg>홈</a></li>
-    </ul>
+  <!-- Search -->
+  <div class="sidebar-search">
+    <div class="search-bar" id="search-bar">
+      <svg width="16" height="16"><use href="#i-search"/></svg>
+      <input type="text" class="search-input" id="search-input" placeholder="검색..." autocomplete="off">
+      <kbd class="search-kbd">Ctrl K</kbd>
+    </div>
   </div>
 
-  <!-- 지역별 업체 (dynamically populated) -->
-  <div class="sidebar-group" id="sidebar-shops">
-    <div class="sidebar-group-title">지역별 업체</div>
-    <ul class="sidebar-nav" id="shop-nav-list">
-      <li class="sidebar-empty">등록된 업체가 없습니다</li>
-    </ul>
-  </div>
+  <!-- Search results (replaces nav while searching) -->
+  <div class="search-results" id="search-results"></div>
 
-  <!-- 꽃배달 가이드 / 블로그 (dynamically populated) -->
-  <div class="sidebar-group" id="sidebar-blog">
-    <div class="sidebar-group-title">꽃배달 가이드</div>
-    <ul class="sidebar-nav" id="blog-nav-list">
-      <li class="sidebar-empty">등록된 글이 없습니다</li>
-    </ul>
-  </div>
+  <!-- Navigation wrap -->
+  <div class="sidebar-nav-wrap" id="sidebar-nav-wrap">
+    <!-- 홈 -->
+    <div class="sidebar-group">
+      <ul class="sidebar-nav">
+        <li><a class="sidebar-link is-active" href="#" data-section="home">
+          <svg class="ico"><use href="#i-home"/></svg>홈</a></li>
+      </ul>
+    </div>
 
-  <!-- 상품 카테고리 -->
-  <div class="sidebar-group">
-    <div class="sidebar-group-title">상품 카테고리</div>
-    <ul class="sidebar-nav">
-      <li><a class="sidebar-link" href="#category/bouquet" data-section="category/bouquet">
-        <svg class="ico"><use href="#i-flower"/></svg>생화 꽃다발</a></li>
-      <li><a class="sidebar-link" href="#category/basket" data-section="category/basket">
-        <svg class="ico"><use href="#i-gift"/></svg>꽃바구니</a></li>
-      <li><a class="sidebar-link" href="#category/wreath" data-section="category/wreath">
-        <svg class="ico"><use href="#i-heart"/></svg>화환·근조</a></li>
-      <li><a class="sidebar-link" href="#category/plant" data-section="category/plant">
-        <svg class="ico"><use href="#i-leaf"/></svg>관엽식물</a></li>
-      <li><a class="sidebar-link" href="#category/special" data-section="category/special">
-        <svg class="ico"><use href="#i-star"/></svg>특별 기획</a></li>
-    </ul>
-  </div>
+    <!-- 지역별 업체 (dynamically populated) -->
+    <div class="sidebar-group is-collapsed" id="sidebar-shops">
+      <button class="sidebar-group-title" type="button">
+        지역별 업체
+        <svg class="chevron" width="12" height="12"><use href="#i-chevron-down"/></svg>
+      </button>
+      <ul class="sidebar-nav" id="shop-nav-list">
+        <li class="sidebar-empty">등록된 업체가 없습니다</li>
+      </ul>
+    </div>
 
-  <!-- 고객 지원 -->
-  <div class="sidebar-group">
-    <div class="sidebar-group-title">고객 지원</div>
-    <ul class="sidebar-nav">
-      <li><a class="sidebar-link" href="#faq" data-section="faq">
-        <svg class="ico"><use href="#i-eye"/></svg>자주 묻는 질문</a></li>
-      <li><a class="sidebar-link" href="#contact" data-section="contact">
-        <svg class="ico"><use href="#i-phone"/></svg>문의하기</a></li>
-    </ul>
+    <!-- 꽃배달 가이드 / 블로그 (dynamically populated) -->
+    <div class="sidebar-group is-collapsed" id="sidebar-blog">
+      <button class="sidebar-group-title" type="button">
+        꽃배달 가이드
+        <svg class="chevron" width="12" height="12"><use href="#i-chevron-down"/></svg>
+      </button>
+      <ul class="sidebar-nav" id="blog-nav-list">
+        <li class="sidebar-empty">등록된 글이 없습니다</li>
+      </ul>
+    </div>
+
+    <!-- 상품 카테고리 -->
+    <div class="sidebar-group is-collapsed">
+      <button class="sidebar-group-title" type="button">
+        상품 카테고리
+        <svg class="chevron" width="12" height="12"><use href="#i-chevron-down"/></svg>
+      </button>
+      <ul class="sidebar-nav">
+        <li><a class="sidebar-link" href="#category/bouquet" data-section="category/bouquet">
+          <svg class="ico"><use href="#i-flower"/></svg>생화 꽃다발</a></li>
+        <li><a class="sidebar-link" href="#category/basket" data-section="category/basket">
+          <svg class="ico"><use href="#i-gift"/></svg>꽃바구니</a></li>
+        <li><a class="sidebar-link" href="#category/wreath" data-section="category/wreath">
+          <svg class="ico"><use href="#i-heart"/></svg>화환·근조</a></li>
+        <li><a class="sidebar-link" href="#category/plant" data-section="category/plant">
+          <svg class="ico"><use href="#i-leaf"/></svg>관엽식물</a></li>
+        <li><a class="sidebar-link" href="#category/special" data-section="category/special">
+          <svg class="ico"><use href="#i-star"/></svg>특별 기획</a></li>
+      </ul>
+    </div>
+
+    <!-- 고객 지원 -->
+    <div class="sidebar-group is-collapsed">
+      <button class="sidebar-group-title" type="button">
+        고객 지원
+        <svg class="chevron" width="12" height="12"><use href="#i-chevron-down"/></svg>
+      </button>
+      <ul class="sidebar-nav">
+        <li><a class="sidebar-link" href="#faq" data-section="faq">
+          <svg class="ico"><use href="#i-eye"/></svg>자주 묻는 질문</a></li>
+        <li><a class="sidebar-link" href="#contact" data-section="contact">
+          <svg class="ico"><use href="#i-phone"/></svg>문의하기</a></li>
+      </ul>
+    </div>
   </div>
 
   <!-- Theme toggle -->
