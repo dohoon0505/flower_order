@@ -87,7 +87,7 @@
   function loadSystem() {
     return fetchJSON('system.json').then(function (data) {
       systemData = data;
-      buildShopSidebar(data.shops || []);
+      buildShopSidebar();
       buildBlogSidebar(data.posts || []);
       buildHomeShopGrid(data.shops || []);
       buildHomeBlogGrid(data.posts || []);
@@ -112,35 +112,36 @@
   }
 
   /* ============ SIDEBAR — SHOPS (by region) ============ */
-  function buildShopSidebar(shops) {
-    if (!shopNavList) return;
-    if (shops.length === 0) {
-      shopNavList.innerHTML = '<li class="sidebar-empty">등록된 업체가 없습니다</li>';
+  function buildShopSidebar() {
+    if (!shopNavList || !systemData) return;
+    var regions = systemData.regions || [];
+    if (regions.length === 0) {
+      shopNavList.innerHTML = '<li class="sidebar-empty">등록된 지역이 없습니다</li>';
       return;
     }
-    var regionMap = {};
-    shops.forEach(function (shop) {
-      var r = shop.region || '기타';
-      if (!regionMap[r]) regionMap[r] = [];
-      regionMap[r].push(shop);
-    });
 
     var html = '';
-    Object.keys(regionMap).forEach(function (region) {
-      var regionShops = regionMap[region];
-      html += '<li class="sidebar-expandable">';
-      html += '<a class="sidebar-link" href="#region/' + encodeURIComponent(region) + '">';
-      html += '<svg class="ico"><use href="#i-map-pin"/></svg>';
-      html += escapeHtml(region) + ' <span class="sidebar-count">' + regionShops.length + '</span>';
-      html += '<svg class="chevron" width="14" height="14"><use href="#i-chevron-down"/></svg>';
-      html += '</a>';
-      html += '<ul class="sidebar-sub">';
-      regionShops.forEach(function (shop) {
-        html += '<li><a class="sidebar-link" href="#shop/' + escapeHtml(shop.id) + '" data-section="shop/' + escapeHtml(shop.id) + '">';
-        html += escapeHtml(shop.name);
+    regions.forEach(function (region) {
+      if (region.cities && region.cities.length > 0) {
+        html += '<li class="sidebar-expandable">';
+        html += '<a class="sidebar-link" href="#region/' + encodeURIComponent(region.name) + '" data-section="region/' + region.name + '">';
+        html += '<svg class="ico"><use href="#i-map-pin"/></svg>';
+        html += escapeHtml(region.name);
+        html += '<svg class="chevron" width="14" height="14"><use href="#i-chevron-down"/></svg>';
+        html += '</a>';
+        html += '<ul class="sidebar-sub">';
+        region.cities.forEach(function (city) {
+          html += '<li><a class="sidebar-link" href="#region/' + encodeURIComponent(region.name) + '/' + encodeURIComponent(city) + '" data-section="region/' + region.name + '/' + city + '">';
+          html += escapeHtml(city);
+          html += '</a></li>';
+        });
+        html += '</ul></li>';
+      } else {
+        html += '<li><a class="sidebar-link" href="#region/' + encodeURIComponent(region.name) + '" data-section="region/' + region.name + '">';
+        html += '<svg class="ico"><use href="#i-map-pin"/></svg>';
+        html += escapeHtml(region.name);
         html += '</a></li>';
-      });
-      html += '</ul></li>';
+      }
     });
     shopNavList.innerHTML = html;
   }
@@ -302,6 +303,39 @@
     return h;
   }
 
+  /* ============ REGION DETAIL ============ */
+  function renderRegionDetail(regionName, cityName) {
+    var displayName = cityName ? regionName + ' ' + cityName : regionName;
+    var shops = (systemData.shops || []).filter(function (shop) {
+      if (cityName) return shop.region === regionName && shop.city === cityName;
+      return shop.region === regionName;
+    });
+
+    var h = '';
+    h += '<div class="report-header">';
+    h += '<a class="report-back" href="#">← 홈으로</a>';
+    h += '<div class="report-meta"><span class="tag">지역</span></div>';
+    h += '<h1 class="report-title">' + escapeHtml(displayName) + '</h1>';
+    if (shops.length === 0) {
+      h += '<p class="report-summary">' + escapeHtml(displayName) + ' 지역의 꽃배달 업체 정보를 준비 중입니다.</p>';
+    } else {
+      h += '<p class="report-summary">' + escapeHtml(displayName) + ' 지역 꽃배달 업체 ' + shops.length + '곳</p>';
+    }
+    h += '</div>';
+
+    if (shops.length > 0) {
+      h += '<div class="report-blocks">';
+      shops.forEach(function (shop) {
+        h += '<a class="analysis-card" href="#shop/' + escapeHtml(shop.id) + '" style="display:block;margin-bottom:var(--size-300)">';
+        h += '<h3>' + escapeHtml(shop.name) + '</h3>';
+        if (shop.summary) h += '<p>' + escapeHtml(shop.summary) + '</p>';
+        h += '</a>';
+      });
+      h += '</div>';
+    }
+    return h;
+  }
+
   /* ============ SIDEBAR HIGHLIGHT ============ */
   function highlightSidebar(id) {
     document.querySelectorAll('.sidebar-link').forEach(function (l) {
@@ -319,7 +353,9 @@
 
   /* ============ ROUTING ============ */
   function route() {
-    var hash = location.hash.replace(/^#\/?/, '').trim();
+    var rawHash = location.hash.replace(/^#\/?/, '').trim();
+    var hash;
+    try { hash = decodeURIComponent(rawHash); } catch (e) { hash = rawHash; }
 
     if (!hash) {
       showHome();
@@ -327,6 +363,12 @@
     }
 
     var parts = hash.split('/');
+
+    if (parts[0] === 'region' && parts[1]) {
+      highlightSidebar(hash);
+      showDetail(renderRegionDetail(parts[1], parts[2] || null));
+      return;
+    }
 
     if (parts[0] === 'shop' && parts[1]) {
       highlightSidebar(hash);
